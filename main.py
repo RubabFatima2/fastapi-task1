@@ -29,7 +29,7 @@ async def all_list(id:int):
     for task in tasks:
         if task["id"] == id:
             return task
-    return {"error": f"Task 99 has no id"}
+    return {"error": f"Task {id} has no id"}
 
 @app.post("/tasks")
 async def add_tasks(task: newtask):
@@ -37,8 +37,37 @@ async def add_tasks(task: newtask):
     done = False
     new_task = { "id": next_id,"title": task.title,"done":done }
     if task.title.strip() == "":
-        return {"error":404}
+        return {"error":201}
     else:
         tasks.append(new_task)
         return {"task" : new_task}
+
+
+
+class changedtask(BaseModel):
+    id : int
+    title : str
+    done : bool
+
+@app.put("/tasks/{id}")
+async def change_task(id : int,  updated_task: changedtask):
+    if updated_task.title.strip() == "":
+        return {"error": "Title cannot be empty"}
+    for task in tasks:
+        if task["id"] == id:
+            task.update( title= updated_task.title,done = updated_task.done)
+            return {"update_task": task}
+    
+    return {"unknown_id":400}
+
+
+@app.delete("/tasks/{id}")
+async def delete_tast(id : int):
+    for task in tasks:
+        if task["id"] == id:
+            tasks.remove(task)
+            return {"status code": 404, "tasks":task}
+    return {"Error": "Task not found"}
+
+
     
