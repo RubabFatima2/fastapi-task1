@@ -5,6 +5,11 @@ from pydantic import BaseModel
 class newtask(BaseModel):
     title : str
   
+class changedtask(BaseModel):
+    id : int
+    title : str
+    done : bool
+
 app = FastAPI()
 
 tasks = [{"id":0, "title":"glossary", "done":True},
@@ -15,6 +20,8 @@ reset_tasks = [{"id":0, "title":"glossary", "done":True},
         {"id":1, "title":"shopping", "done":True},
         {"id":3, "title":"work", "done":False} ]
 
+
+
 @app.get("/")
 async def wealth():
     return { "name": "Task API", "version": "1.0", "endpoints": ["/tasks"] }
@@ -23,10 +30,17 @@ async def wealth():
 async def health():
     return { "status": "ok" }
 
-# @app.get("/tasks")
-# async def get_task():
-#     return {"tasks:":tasks}
-
+@app.get("/tasks")
+async def done_filter(done : bool | None = None, title : str | None = None):
+    done_tasks = []
+    search_tasks=[]
+    for task in tasks:
+        if task["done"] == done:
+            done_tasks.append(task)
+        if task["title"] == title:
+             search_tasks.append(task)
+    return {"Task": done_tasks, "searched_tasks": search_tasks}
+    
 
 @app.get("/tasks/{id}")
 async def all_list(id:int):
@@ -48,10 +62,7 @@ async def add_tasks(task: newtask):
 
 
 
-class changedtask(BaseModel):
-    id : int
-    title : str
-    done : bool
+
 
 @app.put("/tasks/{id}")
 async def change_task(id : int,  updated_task: changedtask):
@@ -73,29 +84,6 @@ async def delete_tast(id : int):
             return {"status code": 404, "tasks":task}
     return {"Error": "Task not found"}
 
-@app.get("/tasks")
-async def done_filter(done : bool | None = None, title : str | None = None):
-    # if done is None:
-    #     return {"tasks": tasks}
-    # if title is None:
-    #     return {"tasks": tasks}
-    done_tasks = []
-    search_tasks=[]
-    for task in tasks:
-        if task["done"] == done:
-            done_tasks.append(task)
-        if task["title"] == title:
-             search_tasks.append(task)
-    return {"Task": done_tasks, "searched_tasks": search_tasks}
-    # return {"Error": "No true task"}
-
-# @app.get("/tasks")
-# async def search(title : str):
-#     search_tasks=[]
-#     for task in tasks:
-#         if task["title"] == title:
-#             search_tasks.append(task)
-#     return {"Respective tasks": search_tasks}
 
 
 @app.get("/stats")
@@ -114,6 +102,7 @@ async def get_stats():
         
 @app.post("/reset")
 async def get_reset():
+    global tasks
     tasks = reset_tasks
     return {"reset tasks": tasks}    
 
