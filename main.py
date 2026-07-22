@@ -11,6 +11,10 @@ tasks = [{"id":0, "title":"glossary", "done":True},
         {"id":1, "title":"shopping", "done":True},
         {"id":3, "title":"work", "done":False} ]
 
+reset_tasks = [{"id":0, "title":"glossary", "done":True},
+        {"id":1, "title":"shopping", "done":True},
+        {"id":3, "title":"work", "done":False} ]
+
 @app.get("/")
 async def wealth():
     return { "name": "Task API", "version": "1.0", "endpoints": ["/tasks"] }
@@ -19,9 +23,9 @@ async def wealth():
 async def health():
     return { "status": "ok" }
 
-@app.get("/tasks")
-async def get_task():
-    return {"tasks:":tasks}
+# @app.get("/tasks")
+# async def get_task():
+#     return {"tasks:":tasks}
 
 
 @app.get("/tasks/{id}")
@@ -69,5 +73,48 @@ async def delete_tast(id : int):
             return {"status code": 404, "tasks":task}
     return {"Error": "Task not found"}
 
+@app.get("/tasks")
+async def done_filter(done : bool | None = None, title : str | None = None):
+    # if done is None:
+    #     return {"tasks": tasks}
+    # if title is None:
+    #     return {"tasks": tasks}
+    done_tasks = []
+    search_tasks=[]
+    for task in tasks:
+        if task["done"] == done:
+            done_tasks.append(task)
+        if task["title"] == title:
+             search_tasks.append(task)
+    return {"Task": done_tasks, "searched_tasks": search_tasks}
+    # return {"Error": "No true task"}
 
-    
+# @app.get("/tasks")
+# async def search(title : str):
+#     search_tasks=[]
+#     for task in tasks:
+#         if task["title"] == title:
+#             search_tasks.append(task)
+#     return {"Respective tasks": search_tasks}
+
+
+@app.get("/stats")
+async def get_stats():
+    total_tasks=0
+    total_done = 0
+    total_undone = 0
+    for task in tasks:
+        total_tasks+=1
+        if task["done"] == True:
+            total_done+=1
+        if task["done"] == False:
+            total_undone+=1
+    return { "total": total_tasks, "done": total_done, "open": total_undone }
+        
+        
+@app.post("/reset")
+async def get_reset():
+    tasks = reset_tasks
+    return {"reset tasks": tasks}    
+
+
