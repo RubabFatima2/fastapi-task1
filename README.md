@@ -162,13 +162,13 @@ content-type: application/json
 
 ## Swagger UI
 
-Add your Swagger UI screenshot here.
 
-```markdown
+
+
 ## Swagger UI
 
 ![Swagger UI](images/1.png)
-```
+
 
 ---
 
