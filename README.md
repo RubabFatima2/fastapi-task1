@@ -165,7 +165,9 @@ content-type: application/json
 Add your Swagger UI screenshot here.
 
 ```markdown
-![Swagger UI](1.png)
+## Swagger UI
+
+![Swagger UI](images/1.png)
 ```
 
 ---
