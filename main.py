@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from tasks import get_all_tasks, get_by_id
+from tasks import get_all_tasks, get_by_id, add_task
 class newtask(BaseModel):
     title : str
   
@@ -12,13 +12,13 @@ class changedtask(BaseModel):
 
 app = FastAPI()
 
-# tasks = [{"id":0, "title":"glossary", "done":True},
-#         {"id":1, "title":"shopping", "done":True},
-#         {"id":3, "title":"work", "done":False} ]
+tasks = [{"id":0, "title":"glossary", "done":True},
+        {"id":1, "title":"shopping", "done":True},
+        {"id":3, "title":"work", "done":False} ]
 
-# reset_tasks = [{"id":0, "title":"glossary", "done":True},
-#         {"id":1, "title":"shopping", "done":True},
-#         {"id":3, "title":"work", "done":False} ]
+reset_tasks = [{"id":0, "title":"glossary", "done":True},
+        {"id":1, "title":"shopping", "done":True},
+        {"id":3, "title":"work", "done":False} ]
 
 
 
@@ -57,16 +57,29 @@ async def all_list(id:int):
         )
     return task
 
+# @app.post("/tasks")
+# async def add_tasks(task: newtask):
+#     next_id = max(task["id"] for task in tasks) + 1
+#     done = False
+#     new_task = { "id": next_id,"title": task.title,"done":done }
+#     if task.title.strip() == "":
+#         return {"error":201}
+#     else:
+#         tasks.append(new_task)
+#         return {"task" : new_task}
+
+
 @app.post("/tasks")
 async def add_tasks(task: newtask):
-    next_id = max(task["id"] for task in tasks) + 1
-    done = False
-    new_task = { "id": next_id,"title": task.title,"done":done }
     if task.title.strip() == "":
-        return {"error":201}
-    else:
-        tasks.append(new_task)
-        return {"task" : new_task}
+       raise HTTPException(
+            status_code=404,
+            detail=f"Task {id} not found"
+        )
+
+    new_task = add_task(task.title)
+       
+    return {"Created successfully": 201, "New task added:" :new_task}
 
 
 

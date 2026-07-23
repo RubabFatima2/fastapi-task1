@@ -48,4 +48,19 @@ def get_by_id(task_id:int):
     return rows
     # connection.commit()
 
+
+def add_task(title: str):
+   
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+    done = False
+    cursor.execute("INSERT INTO tasks(title,done) VALUES(?,?)",(title,done))
+    cursor.execute(
+    "SELECT * FROM tasks WHERE id = last_insert_rowid()")
+    task = cursor.fetchone()
+    
+    
+    connection.commit()
+    connection.close()
+    return task
 connection.close()
