@@ -61,6 +61,34 @@ def add_task(title: str):
     
     
     connection.commit()
+    
     connection.close()
     return task
+
+
+def update_task(id: int, title : str, done: BOOLEAN):
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+    cursor.execute("UPDATE tasks SET title = ?, done = ? WHERE id = ? ",(title,done,id))
+    connection.commit()
+    
+    cursor.execute(
+    "SELECT * FROM tasks WHERE id = ?",
+    (id,)
+)
+     
+    updated_task = cursor.fetchone()
+
+    
+    return updated_task
+
+def delete_task(id:int):
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+    cursor.execute("DELETE from tasks WHERE id=?",(id,))
+    connection.commit()
+    deleted = cursor.rowcount
+
+    connection.close()
+    return deleted 
 connection.close()
