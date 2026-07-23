@@ -8,7 +8,6 @@
   Backend project demonstrating CRUD operations, API design, request validation, database persistence, and clean separation between application logic and data storage.
 </p>
 
-
 <p align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
@@ -16,9 +15,34 @@
 ![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite)
 ![Pydantic](https://img.shields.io/badge/Pydantic-Validation-E92063)
 ![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-black)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 </p>
 
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Application Architecture](#application-architecture)
+- [Project Structure](#project-structure)
+- [Database Design](#database-design)
+- [Database Schema](#database-schema)
+- [Installation](#installation)
+- [Running The Application](#running-the-application)
+- [API Endpoints](#api-endpoints)
+- [API Examples](#api-examples)
+- [SQL Queries Tested](#sql-queries-tested)
+- [Optional Features Implemented](#-optional-features-implemented)
+- [Testing](#testing)
+- [Key Backend Concepts Demonstrated](#key-backend-concepts-demonstrated)
+- [Learning Outcomes](#learning-outcomes)
+- [Future Improvements](#future-improvements)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author](#author)
 
 ---
 
@@ -32,9 +56,8 @@ The API contract remains unchanged while the database layer handles permanent st
 
 This project demonstrates an important backend principle:
 
-> The API defines what the application does.  
+> The API defines what the application does.
 > The database defines where the application stores data.
-
 
 ---
 
@@ -54,14 +77,12 @@ This project demonstrates an important backend principle:
 - Request validation using Pydantic models
 - Interactive Swagger API documentation
 
-
 ## Additional Features
 
 - Health check endpoint
 - Task statistics endpoint
 - Reset testing data endpoint
 - SQL-based database operations
-
 
 ---
 
@@ -76,7 +97,6 @@ This project demonstrates an important backend principle:
 | SQL | Database queries |
 | Uvicorn | Application server |
 | Swagger UI | API testing documentation |
-
 
 ---
 
@@ -100,7 +120,6 @@ SQLite Database
 (tasks.db)
 ```
 
-
 ## Before Database Integration
 
 ```
@@ -113,7 +132,6 @@ Python List
 
 Data was lost after restarting the application.
 
-
 ## After Database Integration
 
 ```
@@ -125,7 +143,6 @@ SQLite Database
 ```
 
 Data survives application restarts.
-
 
 ---
 
@@ -158,6 +175,7 @@ TaskFlow2/
 └── .gitignore
 ```
 
+> **Note:** Screenshots referenced in the [Testing](#testing) section (`1.png`, `2.png`, `3.png`) should live in the `images/` folder alongside `database.png`. Keep this structure in sync with what's actually committed to the repo so links don't break.
 
 ---
 
@@ -173,20 +191,17 @@ SQLite was selected because:
 - Supports real SQL queries
 - Suitable for small backend applications
 
-
 Database file:
 
 ```
 tasks.db
 ```
 
-
 The application automatically:
 
 1. Creates the database if missing
 2. Creates the tasks table
 3. Inserts initial tasks only when the table is empty
-
 
 ---
 
@@ -200,7 +215,6 @@ The application automatically:
 | title | TEXT | Task description |
 | done | BOOLEAN | Completion status |
 
-
 Example data:
 
 | id | title | done |
@@ -208,7 +222,6 @@ Example data:
 |1|Learn FastAPI|0|
 |2|Learn SQLite|0|
 |3|Build Todo API|0|
-
 
 ---
 
@@ -222,7 +235,6 @@ git clone <repository-url>
 cd TaskFlow2
 ```
 
-
 ---
 
 ## Create Virtual Environment
@@ -231,9 +243,7 @@ cd TaskFlow2
 uv venv
 ```
 
-
 Activate environment:
-
 
 ### Windows
 
@@ -241,6 +251,11 @@ Activate environment:
 .venv\Scripts\Activate.ps1
 ```
 
+### macOS / Linux
+
+```bash
+source .venv/bin/activate
+```
 
 ---
 
@@ -250,18 +265,15 @@ Activate environment:
 uv sync
 ```
 
-
 or:
 
 ```bash
 uv add fastapi "uvicorn[standard]"
 ```
 
-
 ---
 
 # Running The Application
-
 
 Start server:
 
@@ -269,13 +281,11 @@ Start server:
 uv run uvicorn main:app --reload
 ```
 
-
 Application runs at:
 
 ```
 http://127.0.0.1:8000
 ```
-
 
 Swagger documentation:
 
@@ -283,36 +293,53 @@ Swagger documentation:
 http://127.0.0.1:8000/docs
 ```
 
-
 ReDoc:
 
 ```
 http://127.0.0.1:8000/redoc
 ```
 
-
 ---
 
 # API Endpoints
 
+| Method | Endpoint | Description | Success Code | Error Codes |
+|-|-|-|-|-|
+|GET|/|API information|200|—|
+|GET|/health|Health check|200|—|
+|GET|/tasks|Get all tasks|200|422 (invalid query param)|
+|GET|/tasks/{id}|Get task by ID|200|404 (task not found)|
+|POST|/tasks|Create task|201|422 (validation error)|
+|PUT|/tasks/{id}|Update task|200|404 (task not found), 422 (validation error)|
+|DELETE|/tasks/{id}|Delete task|200|404 (task not found)|
+|GET|/stats|Task statistics|200|—|
+|POST|/reset|Reset tasks|200|—|
 
-| Method | Endpoint | Description |
-|-|-|-|
-|GET|/|API information|
-|GET|/health|Health check|
-|GET|/tasks|Get all tasks|
-|GET|/tasks/{id}|Get task by ID|
-|POST|/tasks|Create task|
-|PUT|/tasks/{id}|Update task|
-|DELETE|/tasks/{id}|Delete task|
-|GET|/stats|Task statistics|
-|POST|/reset|Reset tasks|
+### Example error response
 
+```json
+{
+  "detail": "Task with id 42 not found"
+}
+```
+
+### Example validation error response (422)
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "title"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
 
 ---
 
 # API Examples
-
 
 ## Create Task
 
@@ -322,7 +349,6 @@ http://127.0.0.1:8000/redoc
 POST /tasks
 ```
 
-
 Body:
 
 ```json
@@ -331,8 +357,7 @@ Body:
 }
 ```
 
-
-Response:
+Response (`201 Created`):
 
 ```json
 {
@@ -342,16 +367,13 @@ Response:
 }
 ```
 
-
 ---
 
 ## Update Task
 
-
 ```
 PUT /tasks/4
 ```
-
 
 Body:
 
@@ -362,18 +384,17 @@ Body:
 }
 ```
 
+Response (`200 OK`) or `404 Not Found` if the ID doesn't exist.
 
 ---
 
 ## Delete Task
 
-
 ```
 DELETE /tasks/4
 ```
 
-
-Response:
+Response (`200 OK`):
 
 ```json
 {
@@ -381,18 +402,15 @@ Response:
 }
 ```
 
-
 ---
 
 # SQL Queries Tested
-
 
 ## Fetch all tasks
 
 ```sql
 SELECT * FROM tasks;
 ```
-
 
 ## Fetch completed tasks
 
@@ -402,14 +420,12 @@ FROM tasks
 WHERE done = 1;
 ```
 
-
 ## Count tasks
 
 ```sql
 SELECT COUNT(*)
 FROM tasks;
 ```
-
 
 ## Update tasks
 
@@ -418,7 +434,6 @@ UPDATE tasks
 SET done = 1;
 ```
 
-
 ## Delete completed tasks
 
 ```sql
@@ -426,9 +441,240 @@ DELETE FROM tasks
 WHERE done = 1;
 ```
 
+---
 
+# ⭐ Optional Features Implemented
 
+In addition to the core CRUD requirements, the following optional features have been implemented using SQL queries.
 
+---
+
+## 🔍 Search Tasks
+
+Search tasks by title using SQL's `LIKE` operator.
+
+### Endpoint
+
+```http
+GET /tasks?search=milk
+```
+
+### Example
+
+```http
+GET /tasks?search=learn
+```
+
+### SQL Query
+
+```sql
+SELECT * FROM tasks
+WHERE title LIKE '%learn%'
+ORDER BY title ASC;
+```
+
+### Example Response
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Learn FastAPI",
+    "done": false,
+    "created_at": "2026-07-23 15:10:20",
+    "updated_at": "2026-07-23 15:10:20"
+  }
+]
+```
+
+---
+
+## ✅ Filter Tasks by Completion Status
+
+Retrieve only completed or pending tasks.
+
+### Endpoint
+
+```http
+GET /tasks?done=true
+```
+
+or
+
+```http
+GET /tasks?done=false
+```
+
+### SQL Query
+
+```sql
+SELECT * FROM tasks
+WHERE done = ?
+ORDER BY title ASC;
+```
+
+### Example Response
+
+```json
+[
+  {
+    "id": 2,
+    "title": "Learn SQLite",
+    "done": true
+  }
+]
+```
+
+---
+
+## 🔤 Alphabetical Sorting
+
+All task lists are automatically sorted alphabetically by title.
+
+### SQL Query
+
+```sql
+SELECT * FROM tasks
+ORDER BY title ASC;
+```
+
+---
+
+## 📊 Task Statistics
+
+Retrieve summary statistics directly from SQLite using SQL aggregate functions.
+
+### Endpoint
+
+```http
+GET /stats
+```
+
+### SQL Queries
+
+```sql
+SELECT COUNT(*) FROM tasks;
+```
+
+```sql
+SELECT COUNT(*) FROM tasks
+WHERE done = 1;
+```
+
+```sql
+SELECT COUNT(*) FROM tasks
+WHERE done = 0;
+```
+
+### Example Response
+
+```json
+{
+  "total": 8,
+  "completed": 3,
+  "pending": 5
+}
+```
+
+---
+
+## 🕒 Automatic Timestamps
+
+Each task stores creation and last update timestamps.
+
+### Database Schema
+
+```sql
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+```
+
+### Update Query
+
+Whenever a task is updated, the `updated_at` column is automatically refreshed.
+
+```sql
+UPDATE tasks
+SET
+    title = ?,
+    done = ?,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = ?;
+```
+
+---
+
+## 💾 SQL Features Used
+
+| Feature | SQL Statement |
+|---------|---------------|
+| Search | `LIKE` |
+| Filtering | `WHERE` |
+| Sorting | `ORDER BY` |
+| Statistics | `COUNT(*)` |
+| Insert | `INSERT INTO` |
+| Update | `UPDATE` |
+| Delete | `DELETE` |
+| Retrieve | `SELECT` |
+| Parameterized Queries | `?` placeholders |
+
+---
+
+## 📌 Sample API Requests
+
+### Get all tasks
+
+```http
+GET /tasks
+```
+
+### Search tasks
+
+```http
+GET /tasks?search=sqlite
+```
+
+### Filter completed tasks
+
+```http
+GET /tasks?done=true
+```
+
+### Filter pending tasks
+
+```http
+GET /tasks?done=false
+```
+
+### Get task statistics
+
+```http
+GET /stats
+```
+
+---
+
+## 🚀 Key Improvements
+
+- Persistent storage using SQLite
+- SQL-based CRUD operations
+- Parameterized queries to prevent SQL Injection
+- Search functionality using `LIKE`
+- Filtering using SQL `WHERE`
+- Automatic alphabetical sorting
+- SQL aggregate functions (`COUNT`)
+- Automatic timestamps (`created_at`, `updated_at`)
+- Clean RESTful API built with FastAPI
+
+---
+
+### Database
+
+![Database](images/database.png)
+*Accessed through Swagger UI*
+
+![Task.db](images/database.png)
+*Accessed through SQL viewer / DB Browser for SQLite*
 
 ---
 
@@ -439,25 +685,41 @@ The API was tested using:
 - Swagger UI
 - Curl
 - Postman
----
+
 ## Swagger UI
 
-
-
 ![Swagger UI](images/1.png)
----
-Persistence testing:
+
+## Sample curl commands
+
+```bash
+# Get all tasks
+curl -X GET http://127.0.0.1:8000/tasks
+
+# Create a task
+curl -X POST http://127.0.0.1:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Complete backend assignment"}'
+
+# Update a task
+curl -X PUT http://127.0.0.1:8000/tasks/4 \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Complete SQLite integration", "done": true}'
+
+# Delete a task
+curl -X DELETE http://127.0.0.1:8000/tasks/4
+```
+
+## Persistence testing
 
 1. Created tasks through API
 2. Restarted FastAPI server
-3. Called GET `/tasks`
+3. Called `GET /tasks`
 4. Verified data remained available
-
 
 ---
 
 # Key Backend Concepts Demonstrated
-
 
 ## API Layer
 
@@ -467,7 +729,6 @@ Responsible for:
 - Validating input
 - Returning responses
 
-
 ## Database Layer
 
 Responsible for:
@@ -475,7 +736,6 @@ Responsible for:
 - SQL queries
 - Saving data
 - Updating records
-
 
 ## Pydantic Models
 
@@ -485,11 +745,9 @@ Responsible for:
 - Type validation
 - Data conversion
 
-
 ---
 
 # Learning Outcomes
-
 
 Through this project, I learned:
 
@@ -502,11 +760,9 @@ Through this project, I learned:
 - Understanding persistence
 - Writing professional backend documentation
 
-
 ---
 
 # Future Improvements
-
 
 Possible improvements:
 
@@ -516,12 +772,25 @@ Possible improvements:
 - Automated testing
 - Database migrations
 - Pagination
-- Search and filtering
 - Async database operations
 
+---
+
+# Contributing
+
+This is a personal learning project built to practice backend engineering and API design. It's not currently set up to accept external contributions, but feedback, suggestions, and issue reports are welcome — feel free to open an issue if you spot a bug or have an idea for improvement.
 
 ---
 
 # License
 
-This project is created for educational and backend engineering practice purposes.
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+You are free to use, copy, modify, and distribute this code for educational or personal purposes, provided the original copyright notice is retained.
+
+---
+
+# Author
+
+**Rubab Ftaima**
+GitHub: [RubabFatima2](https://github.com/RubabFatima2)
