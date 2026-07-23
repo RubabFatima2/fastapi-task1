@@ -1,258 +1,527 @@
-# Task API
+# TaskFlow API
 
-A simple RESTful Task Management API built with **FastAPI**. This project demonstrates the implementation of CRUD (Create, Read, Update, Delete) operations using in-memory storage and Pydantic models for request validation.
+<p align="center">
+  <b>A production-style RESTful Task Management API built with FastAPI and SQLite</b>
+</p>
 
-## Features
+<p align="center">
+  Backend project demonstrating CRUD operations, API design, request validation, database persistence, and clean separation between application logic and data storage.
+</p>
 
-- View all tasks
-- Retrieve a task by ID
-- Create a new task
-- Update an existing task
-- Delete a task
-- Request validation using Pydantic
-- Automatic interactive API documentation with Swagger UI
 
-## Tech Stack
+<p align="center">
 
-- Python 3.x
-- FastAPI
-- Pydantic
-- Uvicorn
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi)
+![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite)
+![Pydantic](https://img.shields.io/badge/Pydantic-Validation-E92063)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-black)
 
-## Project Structure
+</p>
 
-```text
-.
-├── main.py              # Application entry point
-├── ai-version/          # AI-generated implementation (Stage 7)
-├── pyproject.toml       # Project dependencies
-├── uv.lock              # Dependency lock file
+
+---
+
+# Overview
+
+TaskFlow API is a backend REST API built using **FastAPI** that manages tasks through complete CRUD operations.
+
+The project initially used an in-memory Python list for storing tasks. The storage layer was later upgraded to **SQLite**, allowing tasks to persist even after restarting the application.
+
+The API contract remains unchanged while the database layer handles permanent storage.
+
+This project demonstrates an important backend principle:
+
+> The API defines what the application does.  
+> The database defines where the application stores data.
+
+
+---
+
+# Features
+
+## Core Features
+
+- Create new tasks
+- Retrieve all tasks
+- Retrieve task by ID
+- Update existing tasks
+- Delete tasks
+- Persistent SQLite database storage
+- Automatic database initialization
+- Automatic table creation
+- Sample data insertion on first run
+- Request validation using Pydantic models
+- Interactive Swagger API documentation
+
+
+## Additional Features
+
+- Health check endpoint
+- Task statistics endpoint
+- Reset testing data endpoint
+- SQL-based database operations
+
+
+---
+
+# Tech Stack
+
+| Technology | Usage |
+|---|---|
+| Python | Backend programming language |
+| FastAPI | REST API framework |
+| Pydantic | Data validation and schemas |
+| SQLite | Persistent relational database |
+| SQL | Database queries |
+| Uvicorn | Application server |
+| Swagger UI | API testing documentation |
+
+
+---
+
+# Application Architecture
+
+The application follows a simple layered backend structure:
+
+```
+Client
+  |
+  |
+FastAPI Routes
+(main.py)
+  |
+  |
+Database Layer
+(tasks.py)
+  |
+  |
+SQLite Database
+(tasks.db)
+```
+
+
+## Before Database Integration
+
+```
+Client
+  |
+API
+  |
+Python List
+```
+
+Data was lost after restarting the application.
+
+
+## After Database Integration
+
+```
+Client
+  |
+API
+  |
+SQLite Database
+```
+
+Data survives application restarts.
+
+
+---
+
+# Project Structure
+
+```
+TaskFlow2/
+
+│
+├── main.py
+│   └── FastAPI routes and API logic
+│
+├── tasks.py
+│   └── SQLite database operations
+│
+├── tasks.db
+│   └── SQLite database file
+│
+├── images/
+│   └── database.png
+│
+├── pyproject.toml
+│   └── Project dependencies
+│
+├── uv.lock
+│   └── Dependency lock file
+│
 ├── README.md
+│
 └── .gitignore
 ```
 
-## Installation
 
-### Clone the repository
+---
+
+# Database Design
+
+## Database Choice
+
+SQLite was selected because:
+
+- No external database server is required
+- Lightweight and easy to configure
+- Stored as a single file
+- Supports real SQL queries
+- Suitable for small backend applications
+
+
+Database file:
+
+```
+tasks.db
+```
+
+
+The application automatically:
+
+1. Creates the database if missing
+2. Creates the tasks table
+3. Inserts initial tasks only when the table is empty
+
+
+---
+
+# Database Schema
+
+## Tasks Table
+
+| Column | Type | Description |
+|-|-|-|
+| id | INTEGER | Primary key |
+| title | TEXT | Task description |
+| done | BOOLEAN | Completion status |
+
+
+Example data:
+
+| id | title | done |
+|-|-|-|
+|1|Learn FastAPI|0|
+|2|Learn SQLite|0|
+|3|Build Todo API|0|
+
+
+---
+
+# Installation
+
+## Clone Repository
 
 ```bash
 git clone <repository-url>
-cd <repository-folder>
+
+cd TaskFlow2
 ```
 
-### Create a virtual environment
+
+---
+
+## Create Virtual Environment
 
 ```bash
 uv venv
 ```
 
-### Activate the virtual environment
 
-**Windows (PowerShell)**
+Activate environment:
+
+
+### Windows
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-**Windows (Command Prompt)**
 
-```cmd
-.venv\Scripts\activate.bat
-```
+---
 
-### Install Dependencies
+## Install Dependencies
 
 ```bash
 uv sync
 ```
 
-or
+
+or:
 
 ```bash
 uv add fastapi "uvicorn[standard]"
 ```
 
-## Running the Application
+
+---
+
+# Running The Application
+
+
+Start server:
 
 ```bash
 uv run uvicorn main:app --reload
 ```
 
-The server starts at:
 
-```text
+Application runs at:
+
+```
 http://127.0.0.1:8000
 ```
 
-## API Documentation
 
-Swagger UI
+Swagger documentation:
 
-```text
+```
 http://127.0.0.1:8000/docs
 ```
 
-ReDoc
 
-```text
+ReDoc:
+
+```
 http://127.0.0.1:8000/redoc
 ```
 
-## Available Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | API information |
-| GET | `/health` | Health check |
-| GET | `/tasks` | Retrieve all tasks |
-| GET | `/tasks/{id}` | Retrieve a task by ID |
-| POST | `/tasks` | Create a new task |
-| PUT | `/tasks/{id}` | Update an existing task |
-| DELETE | `/tasks/{id}` | Delete a task |
-| GET | `/stats` | Retrieve task statistics *(Optional Extra)* |
-| POST | `/reset` | Reset the task list to the initial sample data *(Optional Extra)* |
 
 ---
 
-## Example Request
+# API Endpoints
 
-### Create a Task
 
-```http
+| Method | Endpoint | Description |
+|-|-|-|
+|GET|/|API information|
+|GET|/health|Health check|
+|GET|/tasks|Get all tasks|
+|GET|/tasks/{id}|Get task by ID|
+|POST|/tasks|Create task|
+|PUT|/tasks/{id}|Update task|
+|DELETE|/tasks/{id}|Delete task|
+|GET|/stats|Task statistics|
+|POST|/reset|Reset tasks|
+
+
+---
+
+# API Examples
+
+
+## Create Task
+
+### Request
+
+```
 POST /tasks
 ```
 
-Request Body
+
+Body:
 
 ```json
 {
-  "title": "Complete FastAPI assignment"
+"title":"Complete backend assignment"
 }
 ```
 
-Example Response
+
+Response:
 
 ```json
 {
-  "id": 4,
-  "title": "Complete FastAPI assignment",
-  "done": false
+"id":4,
+"title":"Complete backend assignment",
+"done":false
 }
 ```
 
+
 ---
 
-## Example curl Output
+## Update Task
 
-```cmd
-C:\Users\abc>curl -i -X POST http://127.0.0.1:8000/tasks ^
--H "Content-Type: application/json" ^
--d "{\"title\":\"Complete FastAPI assignment\"}"
 
-HTTP/1.1 200 OK
-date: Wed, 22 Jul 2026 06:27:50 GMT
-server: uvicorn
-content-length: 68
-content-type: application/json
-
-{"task":{"id":4,"title":"Complete FastAPI assignment","done":false}}
+```
+PUT /tasks/4
 ```
 
----
 
-## Swagger UI
+Body:
 
+```json
+{
+"title":"Complete SQLite integration",
+"done":true
+}
+```
 
-
-
-## Swagger UI
-
-![Swagger UI](images/1.png)
-
-
----
-
-## Optional Extras
-
-In addition to the required CRUD endpoints, the following optional features were implemented:
-
-- **Task Statistics**
-
-  ```
-  GET /stats
-  ```
-
-  Returns:
-
-  ```json
-  {
-    "total": 4,
-    "done": 2,
-    "open": 2
-  }
-  ```
-
-- **Reset Tasks**
-
-  ```
-  POST /reset
-  ```
-
-  Restores the initial sample tasks for testing and demonstrations.
 
 ---
 
-## Testing
+## Delete Task
 
-The API can be tested using:
+
+```
+DELETE /tasks/4
+```
+
+
+Response:
+
+```json
+{
+"status":"Task deleted"
+}
+```
+
+
+---
+
+# SQL Queries Tested
+
+
+## Fetch all tasks
+
+```sql
+SELECT * FROM tasks;
+```
+
+
+## Fetch completed tasks
+
+```sql
+SELECT *
+FROM tasks
+WHERE done = 1;
+```
+
+
+## Count tasks
+
+```sql
+SELECT COUNT(*)
+FROM tasks;
+```
+
+
+## Update tasks
+
+```sql
+UPDATE tasks
+SET done = 1;
+```
+
+
+## Delete completed tasks
+
+```sql
+DELETE FROM tasks
+WHERE done = 1;
+```
+
+
+
+
+
+---
+
+# Testing
+
+The API was tested using:
 
 - Swagger UI
-- curl
+- Curl
 - Postman
-- Insomnia
+---
+## Swagger UI
+
+
+
+![Swagger UI](images/1.png)
+---
+Persistence testing:
+
+1. Created tasks through API
+2. Restarted FastAPI server
+3. Called GET `/tasks`
+4. Verified data remained available
+
 
 ---
 
-## Future Improvements
+# Key Backend Concepts Demonstrated
 
-- Persistent database integration (PostgreSQL/SQLite)
-- UUID-based task identifiers
-- Input validation and custom error handling
-- Pagination and filtering
+
+## API Layer
+
+Responsible for:
+
+- Receiving requests
+- Validating input
+- Returning responses
+
+
+## Database Layer
+
+Responsible for:
+
+- SQL queries
+- Saving data
+- Updating records
+
+
+## Pydantic Models
+
+Responsible for:
+
+- Request schema definition
+- Type validation
+- Data conversion
+
+
+---
+
+# Learning Outcomes
+
+
+Through this project, I learned:
+
+- Designing REST APIs using FastAPI
+- Working with request bodies
+- Using Pydantic schemas
+- Performing SQL CRUD operations
+- Connecting applications with databases
+- Separating routes from database logic
+- Understanding persistence
+- Writing professional backend documentation
+
+
+---
+
+# Future Improvements
+
+
+Possible improvements:
+
+- PostgreSQL migration
 - Authentication and authorization
-- Unit and integration testing
+- Docker deployment
+- Automated testing
+- Database migrations
+- Pagination
+- Search and filtering
+- Async database operations
+
 
 ---
 
-# AI vs Me
+# License
 
-## AI Prompt
-
-```text
-Paste the complete prompt you used to generate the AI implementation here.
-```
-
-## What did the AI do better — and do you understand its version well enough to explain it?
-
-The AI produced a cleaner and more structured implementation. It used proper HTTP status codes, input validation, `HTTPException` for error handling, separate Pydantic models for creating and updating tasks, and organized the code with comments and endpoint descriptions. I understand its implementation and can explain how each endpoint, validation rule, and exception works.
-
-## What did it get wrong or quietly ignore from your prompt?
-
-The AI added several features that were not explicitly requested, including endpoint summaries, `Query`, `Field`, `HTTPException`, and a different project structure. It also changed the sample task data and response format instead of keeping them exactly as in my implementation.
-
-## What did your prompt forget to specify — and what did the AI silently decide for you?
-
-My prompt did not specify how the code should be organized, which HTTP status codes to use, how validation should be implemented, or how the initial task data should look. Because of this, the AI made those design decisions automatically by restructuring the project, adding validation, and improving documentation.
-
-## Concrete Differences
-
-- My implementation uses simple `for` loops, while the AI uses list comprehensions for filtering and searching.
-- My code returns dictionaries for error responses, whereas the AI uses `HTTPException` with appropriate HTTP status codes.
-- I created two Pydantic models (`newtask` and `changedtask`), while the AI created separate models (`Task`, `TaskCreate`, and `TaskUpdate`) with additional validation.
-- The AI added endpoint summaries, comments, and cleaner code organization that were not present in my implementation.
-
----
-
-## License
-
-This project is intended for educational and learning purposes.
+This project is created for educational and backend engineering practice purposes.
