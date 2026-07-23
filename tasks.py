@@ -6,7 +6,7 @@ cursor = connection.cursor()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS tasks(
-    id INTERGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT,
     done BOOLEAN)
    """)
@@ -20,10 +20,32 @@ if count == 0:
     "INSERT INTO tasks(title, done) VALUES (?, ?)",
     [
         ("Learn FastAPI", False),
-        ("Learn SQLite", False),
+        ("Learn SQLite",True),
         ("Build Todo API", False),
     ]
 )
 
 connection.commit()
+
+def get_all_tasks():
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM tasks")
+
+    rows = cursor.fetchall()
+    return rows
+    connection.close()
+    # connection.commit()
+
+
+def get_by_id(task_id:int):
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM tasks where id = ? ",(task_id,))
+    rows = cursor.fetchone()
+    connection.close()
+    return rows
+    # connection.commit()
+
 connection.close()

@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+from tasks import get_all_tasks, get_by_id
 class newtask(BaseModel):
     title : str
   
@@ -12,13 +12,13 @@ class changedtask(BaseModel):
 
 app = FastAPI()
 
-tasks = [{"id":0, "title":"glossary", "done":True},
-        {"id":1, "title":"shopping", "done":True},
-        {"id":3, "title":"work", "done":False} ]
+# tasks = [{"id":0, "title":"glossary", "done":True},
+#         {"id":1, "title":"shopping", "done":True},
+#         {"id":3, "title":"work", "done":False} ]
 
-reset_tasks = [{"id":0, "title":"glossary", "done":True},
-        {"id":1, "title":"shopping", "done":True},
-        {"id":3, "title":"work", "done":False} ]
+# reset_tasks = [{"id":0, "title":"glossary", "done":True},
+#         {"id":1, "title":"shopping", "done":True},
+#         {"id":3, "title":"work", "done":False} ]
 
 
 
@@ -30,24 +30,32 @@ async def wealth():
 async def health():
     return { "status": "ok" }
 
-@app.get("/tasks")
-async def done_filter(done : bool | None = None, title : str | None = None):
-    done_tasks = []
-    search_tasks=[]
-    for task in tasks:
-        if task["done"] == done:
-            done_tasks.append(task)
-        if task["title"] == title:
-             search_tasks.append(task)
-    return {"Task": done_tasks, "searched_tasks": search_tasks}
+# @app.get("/tasks")
+# async def done_filter(done : bool | None = None, title : str | None = None):
+#     done_tasks = []
+#     search_tasks=[]
+#     for task in tasks:
+#         if task["done"] == done:
+#             done_tasks.append(task)
+#         if task["title"] == title:
+#              search_tasks.append(task)
+#     return {"Task": done_tasks, "searched_tasks": search_tasks}
     
+@app.get("/tasks")
+async def get_tasks():
+     return get_all_tasks()
+
 
 @app.get("/tasks/{id}")
 async def all_list(id:int):
-    for task in tasks:
-        if task["id"] == id:
-            return task
-    return {"error": f"Task {id} has no id"}
+    
+    task = get_by_id(id)
+    if task is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task {id} not found"
+        )
+    return task
 
 @app.post("/tasks")
 async def add_tasks(task: newtask):
