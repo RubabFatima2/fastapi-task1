@@ -670,11 +670,11 @@ GET /stats
 
 ### Database
 
-![Database](images/database.png)
+![Database](images/2.png)
 *Accessed through Swagger UI*
 
-![Task.db](images/database.png)
-*Accessed through SQL viewer / DB Browser for SQLite*
+![Task.db](images/3.png)
+*Accessed through SQL / DB Browser for SQLite*
 
 ---
 
