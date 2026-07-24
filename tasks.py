@@ -1,25 +1,29 @@
-import sqlite3
+import os
+import psycopg
+from dotenv import load_dotenv
 
-connection = sqlite3.connect("tasks.db")
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+def get_connection():
+    return psycopg.connect(DATABASE_URL)
+
+connection = get_connection()
 cursor = connection.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS tasks(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    done BOOLEAN,
+cursor.execute("""CREATE TABLE IF NOT EXISTS tasks(
+    id serial PRIMARY KEY,
+    title TEXT NOT NULL,
+    done BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-   """)
-   
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)""")
 
 cursor.execute("SELECT COUNT(*) FROM tasks")
 count = cursor.fetchone()[0]
 
 if count == 0:
     cursor.executemany(
-    "INSERT INTO tasks(title, done) VALUES (?, ?)",
+    "INSERT INTO tasks(title, done) VALUES (%s, %s)",
     [
         ("Learn FastAPI", False),
         ("Learn SQLite",True),
@@ -30,18 +34,18 @@ if count == 0:
 connection.commit()
 
 def get_all_tasks(search=None, done=None):
-    connection = sqlite3.connect("tasks.db")
+    connection = get_connection()
     cursor = connection.cursor()
     query = "SELECT * FROM tasks"
     
     params = []
 
     if search:
-        query += " WHERE title LIKE ?"
+        query += " WHERE title LIKE %s"
         params.append(f"%{search}%")
 
     elif done is not None:
-        query += " WHERE done = ?"
+        query += " WHERE done = %s"
         params.append(done)
 
     query += " ORDER BY title ASC"
@@ -56,23 +60,27 @@ def get_all_tasks(search=None, done=None):
 
 
 def get_by_id(task_id:int):
-    connection = sqlite3.connect("tasks.db")
+    connection = get_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM tasks where id = ? ",(task_id,))
+    cursor.execute("SELECT * FROM tasks where id = %s",(task_id,))
     rows = cursor.fetchone()
     connection.close()
     return rows
     # connection.commit()
 
 
-def add_task(title: str, done=bool):
+def add_task(title: str, done:bool):
    
-    connection = sqlite3.connect("tasks.db")
+    connection = get_connection()
     cursor = connection.cursor()
     
-    cursor.execute("INSERT INTO tasks(title,done) VALUES(?,?)",(title,done))
-    cursor.execute(
-    "SELECT * FROM tasks WHERE id = last_insert_rowid()")
+    cursor.execute("""
+    INSERT INTO tasks(title, done)
+    VALUES (%s, %s)
+    RETURNING *
+    """, (title, done))
+    # cursor.execute(
+    # "SELECT * FROM tasks WHERE id = last_insert_rowid()")
     task = cursor.fetchone()
     
     
@@ -83,18 +91,18 @@ def add_task(title: str, done=bool):
 
 
 def update_task(id: int, title: str, done: bool):
-    connection = sqlite3.connect("tasks.db")
+    connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
         UPDATE tasks
-        SET title = ?, done = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
+        SET title = %s, done = %s, updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
     """, (title, done, id))
 
     connection.commit()
 
-    cursor.execute("SELECT * FROM tasks WHERE id = ?", (id,))
+    cursor.execute("SELECT * FROM tasks WHERE id = %s", (id,))
     updated_task = cursor.fetchone()
 
     connection.close()
@@ -102,9 +110,9 @@ def update_task(id: int, title: str, done: bool):
     return updated_task
 
 def delete_task(id:int):
-    connection = sqlite3.connect("tasks.db")
+    connection = get_connection()
     cursor = connection.cursor()
-    cursor.execute("DELETE from tasks WHERE id=?",(id,))
+    cursor.execute("DELETE from tasks WHERE id=%s",(id,))
     connection.commit()
     deleted = cursor.rowcount
 
@@ -112,7 +120,7 @@ def delete_task(id:int):
     return deleted 
 
 def get_stats():
-    connection = sqlite3.connect("tasks.db")
+    connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM tasks")
