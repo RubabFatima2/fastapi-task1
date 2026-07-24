@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import HTTPException
+from fastapi import HTTPException,Response, status
 from fastapi import FastAPI
 from pydantic import BaseModel
 from tasks import get_all_tasks, get_by_id, add_task, update_task, delete_task, get_stats
@@ -48,7 +48,7 @@ async def all_list(id:int):
     return task
 
 #Add tasks
-@app.post("/tasks")
+@app.post("/tasks", status_code=status.HTTP_201_CREATED)
 async def add_tasks(task: newtask):
     if task.title.strip() == "":
        raise HTTPException(
@@ -57,7 +57,7 @@ async def add_tasks(task: newtask):
 )
     new_task = add_task(task.title,task.done)
        
-    return {"Created successfully": 201, "New task added:" :new_task}
+    return {"New task added:" :new_task}
 
 
 
@@ -86,7 +86,7 @@ async def change_task(id: int, updated_task: changedtask):
 
 
 #Delete task
-@app.delete("/tasks/{id}")
+@app.delete("/tasks/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_tast(id : int):
     deleted = delete_task(id)
     if deleted == 0:
@@ -95,7 +95,7 @@ async def delete_tast(id : int):
     detail="Task not found"
 )
 
-    return {"Status": "Task deleted"}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 #Show statistics

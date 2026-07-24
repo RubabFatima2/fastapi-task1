@@ -97,14 +97,10 @@ def update_task(id: int, title: str, done: bool):
     cursor.execute("""
         UPDATE tasks
         SET title = %s, done = %s, updated_at = CURRENT_TIMESTAMP
-        WHERE id = %s
+        WHERE id = %s RETURNING *
     """, (title, done, id))
-
-    connection.commit()
-
-    cursor.execute("SELECT * FROM tasks WHERE id = %s", (id,))
     updated_task = cursor.fetchone()
-
+    connection.commit()
     connection.close()
 
     return updated_task
@@ -126,12 +122,13 @@ def get_stats():
     cursor.execute("SELECT COUNT(*) FROM tasks")
     total = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 1")
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = TRUE")
     completed = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 0")
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = FALSE")
     pending = cursor.fetchone()[0]
-
+    
+    cursor.close()
     connection.close()
 
     return {
