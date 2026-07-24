@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  Backend project demonstrating CRUD operations, API design, request validation, database persistence, and clean separation between application logic and data storage.
+  A backend project demonstrating CRUD operations, API design, request validation, database persistence, and a clean separation between application logic and data storage.
 </p>
 
 <p align="center">
@@ -29,13 +29,13 @@
 - [Application Architecture](#application-architecture)
 - [Project Structure](#project-structure)
 - [Database Design](#database-design)
-- [Database Schema](#database-schema)
 - [Installation](#installation)
-- [Running The Application](#running-the-application)
+- [Running the Application](#running-the-application)
 - [API Endpoints](#api-endpoints)
 - [API Examples](#api-examples)
 - [SQL Queries Tested](#sql-queries-tested)
-- [Optional Features Implemented](#-optional-features-implemented)
+- [Optional Features Implemented](#optional-features-implemented)
+- [Deployment & One-Command Setup](#deployment--one-command-setup)
 - [Testing](#testing)
 - [Key Backend Concepts Demonstrated](#key-backend-concepts-demonstrated)
 - [Learning Outcomes](#learning-outcomes)
@@ -46,81 +46,95 @@
 
 ---
 
-# Overview
+## Overview
 
-TaskFlow API is a backend REST API built using **FastAPI** that manages tasks through complete CRUD operations.
+TaskFlow API is a backend REST API built with **FastAPI** that manages tasks through a complete set of CRUD operations.
 
-The project initially used an in-memory Python list for storing tasks. The storage layer was later upgraded to **SQLite**, allowing tasks to persist even after restarting the application.
+The project originally stored tasks in an in-memory Python list. The storage layer was later upgraded to **SQLite**, so tasks persist across application restarts, and the project was further extended to support a **Dockerized PostgreSQL** backend for production-style deployment. Throughout these changes, the API contract stayed the same — only the underlying storage implementation changed.
 
-The API contract remains unchanged while the database layer handles permanent storage.
-
-This project demonstrates an important backend principle:
+This project illustrates a core backend principle:
 
 > The API defines what the application does.
-> The database defines where the application stores data.
+> The database defines where the application stores its data.
 
 ---
 
-# Features
+## Features
 
-## Core Features
+### Core Features
 
 - Create new tasks
 - Retrieve all tasks
-- Retrieve task by ID
+- Retrieve a task by ID
 - Update existing tasks
 - Delete tasks
 - Persistent SQLite database storage
-- Automatic database initialization
-- Automatic table creation
-- Sample data insertion on first run
+- Automatic database initialization and table creation
+- Sample data seeding on first run
 - Request validation using Pydantic models
 - Interactive Swagger API documentation
 
-## Additional Features
+### Additional Features
 
 - Health check endpoint
 - Task statistics endpoint
-- Reset testing data endpoint
-- SQL-based database operations
+- Endpoint for resetting test data
+- Search and filtering via SQL queries
+- Alphabetical task sorting
+- PostgreSQL-backed persistent storage
+- Environment variable configuration with `.env`
+- Dockerized PostgreSQL database
+- One-command startup with Docker Compose
+- Repository pattern with an interchangeable storage layer
+- SQL-based CRUD operations using Psycopg
 
 ---
 
-# Tech Stack
+## Tech Stack
 
 | Technology | Usage |
 |---|---|
 | Python | Backend programming language |
 | FastAPI | REST API framework |
 | Pydantic | Data validation and schemas |
-| SQLite | Persistent relational database |
+| Docker | Containerization platform |
+| Docker Compose | Multi-container application orchestration |
+| python-dotenv | Environment variable management |
 | SQL | Database queries |
 | Uvicorn | Application server |
-| Swagger UI | API testing documentation |
+| Swagger UI | API testing and documentation |
 
 ---
 
-# Application Architecture
+## Application Architecture
 
 The application follows a simple layered backend structure:
 
 ```
-Client
-  |
-  |
-FastAPI Routes
-(main.py)
-  |
-  |
-Database Layer
-(tasks.py)
-  |
-  |
-SQLite Database
-(tasks.db)
+                     Client
+                       |
+                       |
+                HTTP Requests
+                       |
+                       |
+                FastAPI Backend
+                  (main.py)
+                       |
+                       |
+          API Routes + Pydantic Models
+                       |
+                       |
+             Database Access Layer
+                (tasks.py)
+                       |
+                       |
+                PostgreSQL Database
+                       |
+                       |
+                Docker Container
 ```
 
-## Before Database Integration
+### Before Database Integration
 
 ```
 Client
@@ -130,36 +144,65 @@ API
 Python List
 ```
 
-Data was lost after restarting the application.
+Data was lost whenever the application restarted.
 
-## After Database Integration
+### After Database Integration
 
 ```
-Client
-  |
-API
-  |
-SQLite Database
+                Client
+                  |
+                  |
+          HTTP Requests / Responses
+                  |
+                  |
+          FastAPI Application
+              (main.py)
+                  |
+                  |
+          Route & Validation Layer
+      (API Endpoints + Pydantic Models)
+                  |
+                  |
+          Database Access Layer
+              (tasks.py)
+                  |
+                  |
+          SQLite Database
+              (tasks.db)
 ```
 
-Data survives application restarts.
+Data now survives application restarts, persisted in the `tasks.db` file.
+
+### Docker View
+
+```
+task-manager-api
+│
+├── API Container
+│       |
+│       └── FastAPI + Python
+│
+└── Database Container
+        |
+        └── PostgreSQL
+            |
+            └── Volume
+                |
+                └── Persistent Data
+```
 
 ---
 
-# Project Structure
+## Project Structure
 
 ```
 TaskFlow2/
-
 │
 ├── main.py
 │   └── FastAPI routes and API logic
 │
 ├── tasks.py
-│   └── SQLite database operations
-│
-├── tasks.db
-│   └── SQLite database file
+│   └── PostgreSQL database operations
 │
 ├── images/
 │   └── database.png
@@ -167,99 +210,112 @@ TaskFlow2/
 ├── pyproject.toml
 │   └── Project dependencies
 │
+├── .env                        # Local secrets (NOT committed)
+├── .env.example                # Template for others
+├── .gitignore                  # Ignores .env, venv, cache
 ├── uv.lock
 │   └── Dependency lock file
 │
-├── README.md
-│
-└── .gitignore
+├── requirements.txt            # Python dependencies
+└── README.md
 ```
 
-> **Note:** Screenshots referenced in the [Testing](#testing) section (`1.png`, `2.png`, `3.png`) should live in the `images/` folder alongside `database.png`. Keep this structure in sync with what's actually committed to the repo so links don't break.
+> **Note:** Screenshots referenced in the [Testing](#testing) section (`1.png`, `2.png`, `3.png`) should live in the `images/` folder alongside `database.png`. Keep this structure in sync with what's actually committed to the repo so the links don't break.
 
 ---
 
-# Database Design
+## Database Design
 
-## Database Choice
+### Database Choice
 
-SQLite was selected because:
+PostgreSQL was selected as the production database because it:
 
-- No external database server is required
-- Lightweight and easy to configure
-- Stored as a single file
-- Supports real SQL queries
-- Suitable for small backend applications
+- Is a powerful relational database system used in real-world backend applications
+- Supports advanced SQL queries and reliable data management
+- Offers better scalability than file-based databases
+- Runs as an independent database server inside a Docker container
+- Supports persistent storage through Docker volumes
+- Integrates efficiently with FastAPI applications
 
-Database file:
+### Database Technology
+
+**Database:** PostgreSQL
+**Deployment:** Docker container
+**Connection:** Environment-based connection string (`DATABASE_URL`)
+
+Example:
 
 ```
-tasks.db
+postgres://postgres:dev@db:5432/tasks
 ```
 
-The application automatically:
+### Database Schema
 
-1. Creates the database if missing
-2. Creates the tasks table
-3. Inserts initial tasks only when the table is empty
-
----
-
-# Database Schema
-
-## Tasks Table
+The application uses a `tasks` table:
 
 | Column | Type | Description |
-|-|-|-|
-| id | INTEGER | Primary key |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | Unique task identifier |
 | title | TEXT | Task description |
 | done | BOOLEAN | Completion status |
 
-Example data:
+### Database Initialization
 
-| id | title | done |
-|-|-|-|
-|1|Learn FastAPI|0|
-|2|Learn SQLite|0|
-|3|Build Todo API|0|
+On application startup, the system automatically:
+
+- Connects to PostgreSQL using the `DATABASE_URL` environment variable
+- Creates the `tasks` table if it does not already exist
+- Inserts initial sample tasks only when the table is empty
+- Preserves existing data using a Docker volume
+
+### Data Persistence
+
+PostgreSQL data is stored using a Docker volume:
+
+```
+PostgreSQL Container
+        |
+        ↓
+  Docker Volume
+        |
+        ↓
+Persistent Task Data
+```
+
+This ensures tasks remain available even after stopping and restarting the Docker containers.
 
 ---
 
-# Installation
+## Installation
 
-## Clone Repository
+### Clone the Repository
 
 ```bash
 git clone <repository-url>
-
 cd TaskFlow2
 ```
 
----
-
-## Create Virtual Environment
+### Create a Virtual Environment
 
 ```bash
 uv venv
 ```
 
-Activate environment:
+Activate the environment:
 
-### Windows
+**Windows**
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-### macOS / Linux
+**macOS / Linux**
 
 ```bash
 source .venv/bin/activate
 ```
 
----
-
-## Install Dependencies
+### Install Dependencies
 
 ```bash
 uv sync
@@ -273,15 +329,15 @@ uv add fastapi "uvicorn[standard]"
 
 ---
 
-# Running The Application
+## Running the Application
 
-Start server:
+Start the server:
 
 ```bash
 uv run uvicorn main:app --reload
 ```
 
-Application runs at:
+The application runs at:
 
 ```
 http://127.0.0.1:8000
@@ -301,21 +357,21 @@ http://127.0.0.1:8000/redoc
 
 ---
 
-# API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description | Success Code | Error Codes |
 |-|-|-|-|-|
-|GET|/|API information|200|—|
-|GET|/health|Health check|200|—|
-|GET|/tasks|Get all tasks|200|422 (invalid query param)|
-|GET|/tasks/{id}|Get task by ID|200|404 (task not found)|
-|POST|/tasks|Create task|201|422 (validation error)|
-|PUT|/tasks/{id}|Update task|200|404 (task not found), 422 (validation error)|
-|DELETE|/tasks/{id}|Delete task|200|404 (task not found)|
-|GET|/stats|Task statistics|200|—|
-|POST|/reset|Reset tasks|200|—|
+| GET | / | API information | 200 | — |
+| GET | /health | Health check | 200 | — |
+| GET | /tasks | Get all tasks | 200 | 422 (invalid query param) |
+| GET | /tasks/{id} | Get task by ID | 200 | 404 (task not found) |
+| POST | /tasks | Create task | 201 | 422 (validation error) |
+| PUT | /tasks/{id} | Update task | 200 | 404 (task not found), 422 (validation error) |
+| DELETE | /tasks/{id} | Delete task | 200 | 404 (task not found) |
+| GET | /stats | Task statistics | 200 | — |
+| POST | /reset | Reset tasks | 200 | — |
 
-### Example error response
+### Example Error Response
 
 ```json
 {
@@ -323,7 +379,7 @@ http://127.0.0.1:8000/redoc
 }
 ```
 
-### Example validation error response (422)
+### Example Validation Error Response (422)
 
 ```json
 {
@@ -339,11 +395,11 @@ http://127.0.0.1:8000/redoc
 
 ---
 
-# API Examples
+## API Examples
 
-## Create Task
+### Create Task
 
-### Request
+**Request**
 
 ```
 POST /tasks
@@ -353,23 +409,21 @@ Body:
 
 ```json
 {
-"title":"Complete backend assignment"
+  "title": "Complete backend assignment"
 }
 ```
 
-Response (`201 Created`):
+**Response** (`201 Created`):
 
 ```json
 {
-"id":4,
-"title":"Complete backend assignment",
-"done":false
+  "id": 4,
+  "title": "Complete backend assignment",
+  "done": false
 }
 ```
 
----
-
-## Update Task
+### Update Task
 
 ```
 PUT /tasks/4
@@ -379,40 +433,38 @@ Body:
 
 ```json
 {
-"title":"Complete SQLite integration",
-"done":true
+  "title": "Complete SQLite integration",
+  "done": true
 }
 ```
 
-Response (`200 OK`) or `404 Not Found` if the ID doesn't exist.
+Response: `200 OK`, or `404 Not Found` if the ID doesn't exist.
 
----
-
-## Delete Task
+### Delete Task
 
 ```
 DELETE /tasks/4
 ```
 
-Response (`200 OK`):
+**Response** (`200 OK`):
 
 ```json
 {
-"status":"Task deleted"
+  "status": "Task deleted"
 }
 ```
 
 ---
 
-# SQL Queries Tested
+## SQL Queries Tested
 
-## Fetch all tasks
+**Fetch all tasks**
 
 ```sql
 SELECT * FROM tasks;
 ```
 
-## Fetch completed tasks
+**Fetch completed tasks**
 
 ```sql
 SELECT *
@@ -420,21 +472,21 @@ FROM tasks
 WHERE done = 1;
 ```
 
-## Count tasks
+**Count tasks**
 
 ```sql
 SELECT COUNT(*)
 FROM tasks;
 ```
 
-## Update tasks
+**Update tasks**
 
 ```sql
 UPDATE tasks
 SET done = 1;
 ```
 
-## Delete completed tasks
+**Delete completed tasks**
 
 ```sql
 DELETE FROM tasks
@@ -443,29 +495,27 @@ WHERE done = 1;
 
 ---
 
-# ⭐ Optional Features Implemented
+## Optional Features Implemented
 
 In addition to the core CRUD requirements, the following optional features have been implemented using SQL queries.
 
----
-
-## 🔍 Search Tasks
+### 🔍 Search Tasks
 
 Search tasks by title using SQL's `LIKE` operator.
 
-### Endpoint
+**Endpoint**
 
 ```http
 GET /tasks?search=milk
 ```
 
-### Example
+**Example**
 
 ```http
 GET /tasks?search=learn
 ```
 
-### SQL Query
+**SQL Query**
 
 ```sql
 SELECT * FROM tasks
@@ -473,7 +523,7 @@ WHERE title LIKE '%learn%'
 ORDER BY title ASC;
 ```
 
-### Example Response
+**Example Response**
 
 ```json
 [
@@ -487,13 +537,11 @@ ORDER BY title ASC;
 ]
 ```
 
----
-
-## ✅ Filter Tasks by Completion Status
+### ✅ Filter Tasks by Completion Status
 
 Retrieve only completed or pending tasks.
 
-### Endpoint
+**Endpoint**
 
 ```http
 GET /tasks?done=true
@@ -505,7 +553,7 @@ or
 GET /tasks?done=false
 ```
 
-### SQL Query
+**SQL Query**
 
 ```sql
 SELECT * FROM tasks
@@ -513,7 +561,7 @@ WHERE done = ?
 ORDER BY title ASC;
 ```
 
-### Example Response
+**Example Response**
 
 ```json
 [
@@ -525,32 +573,28 @@ ORDER BY title ASC;
 ]
 ```
 
----
-
-## 🔤 Alphabetical Sorting
+### 🔤 Alphabetical Sorting
 
 All task lists are automatically sorted alphabetically by title.
 
-### SQL Query
+**SQL Query**
 
 ```sql
 SELECT * FROM tasks
 ORDER BY title ASC;
 ```
 
----
-
-## 📊 Task Statistics
+### 📊 Task Statistics
 
 Retrieve summary statistics directly from SQLite using SQL aggregate functions.
 
-### Endpoint
+**Endpoint**
 
 ```http
 GET /stats
 ```
 
-### SQL Queries
+**SQL Queries**
 
 ```sql
 SELECT COUNT(*) FROM tasks;
@@ -566,7 +610,7 @@ SELECT COUNT(*) FROM tasks
 WHERE done = 0;
 ```
 
-### Example Response
+**Example Response**
 
 ```json
 {
@@ -576,35 +620,31 @@ WHERE done = 0;
 }
 ```
 
----
+### 🕒 Automatic Timestamps
 
-## 🕒 Automatic Timestamps
+Each task stores creation and last-updated timestamps.
 
-Each task stores creation and last update timestamps.
-
-### Database Schema
+**Database Schema**
 
 ```sql
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ```
 
-### Update Query
+**Update Query**
 
-Whenever a task is updated, the `updated_at` column is automatically refreshed.
+Whenever a task is updated, the `updated_at` column is refreshed automatically:
 
 ```sql
 UPDATE tasks
 SET
-    title = ?,
-    done = ?,
+    title = %s,
+    done = %s,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = ?;
+WHERE id = %s;
 ```
 
----
-
-## 💾 SQL Features Used
+### 💾 SQL Features Used
 
 | Feature | SQL Statement |
 |---------|---------------|
@@ -618,55 +658,49 @@ WHERE id = ?;
 | Retrieve | `SELECT` |
 | Parameterized Queries | `?` placeholders |
 
----
+### 📌 Sample API Requests
 
-## 📌 Sample API Requests
-
-### Get all tasks
+**Get all tasks**
 
 ```http
 GET /tasks
 ```
 
-### Search tasks
+**Search tasks**
 
 ```http
 GET /tasks?search=sqlite
 ```
 
-### Filter completed tasks
+**Filter completed tasks**
 
 ```http
 GET /tasks?done=true
 ```
 
-### Filter pending tasks
+**Filter pending tasks**
 
 ```http
 GET /tasks?done=false
 ```
 
-### Get task statistics
+**Get task statistics**
 
 ```http
 GET /stats
 ```
 
----
-
-## 🚀 Key Improvements
+### 🚀 Key Improvements
 
 - Persistent storage using SQLite
 - SQL-based CRUD operations
-- Parameterized queries to prevent SQL Injection
+- Parameterized queries to prevent SQL injection
 - Search functionality using `LIKE`
 - Filtering using SQL `WHERE`
 - Automatic alphabetical sorting
 - SQL aggregate functions (`COUNT`)
 - Automatic timestamps (`created_at`, `updated_at`)
 - Clean RESTful API built with FastAPI
-
----
 
 ### Database
 
@@ -678,19 +712,19 @@ GET /stats
 
 ---
 
-# Testing
+## Testing
 
 The API was tested using:
 
 - Swagger UI
-- Curl
+- curl
 - Postman
 
-## Swagger UI
+### Swagger UI
 
 ![Swagger UI](images/1.png)
 
-## Sample curl commands
+### Sample curl Commands
 
 ```bash
 # Get all tasks
@@ -710,18 +744,18 @@ curl -X PUT http://127.0.0.1:8000/tasks/4 \
 curl -X DELETE http://127.0.0.1:8000/tasks/4
 ```
 
-## Persistence testing
+### Persistence Testing
 
-1. Created tasks through API
-2. Restarted FastAPI server
+1. Created tasks through the API
+2. Restarted the FastAPI server
 3. Called `GET /tasks`
-4. Verified data remained available
+4. Verified the data remained available
 
 ---
 
-# Key Backend Concepts Demonstrated
+## Key Backend Concepts Demonstrated
 
-## API Layer
+### API Layer
 
 Responsible for:
 
@@ -729,46 +763,209 @@ Responsible for:
 - Validating input
 - Returning responses
 
-## Database Layer
+### Database Layer
 
 Responsible for:
 
-- SQL queries
+- Executing SQL queries
 - Saving data
 - Updating records
 
-## Pydantic Models
+### Pydantic Models
 
 Responsible for:
 
-- Request schema definition
-- Type validation
-- Data conversion
+- Defining request schemas
+- Enforcing type validation
+- Handling data conversion
 
 ---
 
-# Learning Outcomes
+## Deployment & One-Command Setup
+
+This project is designed so that any developer can clone the repository and run the complete application stack with a single command.
+
+The stack includes:
+
+- FastAPI backend application
+- PostgreSQL database
+- Docker containerization
+- Docker Compose orchestration
+- Persistent database storage using Docker volumes
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd task-manager-api
+```
+
+### 2. Configure Environment Variables
+
+Create your local environment file from the provided template:
+
+```bash
+cp .env.example .env
+```
+
+The `.env` file contains the database connection configuration, for example:
+
+```env
+DATABASE_URL=postgres://postgres:dev@db:5432/tasks
+```
+
+⚠️ **Security Note:** The `.env` file contains sensitive configuration and is excluded from Git via `.gitignore`. Only `.env.example`, with placeholder values, is committed.
+
+### 3. Run the Application
+
+Start the complete backend stack:
+
+```bash
+docker compose up
+```
+
+Docker Compose automatically starts:
+
+```
+FastAPI Application Container
+            |
+            |
+            ↓
+PostgreSQL Database Container
+```
+
+The application then automatically:
+
+- Starts the FastAPI server
+- Connects to PostgreSQL
+- Creates the `tasks` table if it does not exist
+- Inserts initial seed tasks only when the database is empty
+- Keeps data persistent using Docker volumes
+
+### 4. Verify the API
+
+Once the containers are running, test the API:
+
+```bash
+curl -i http://localhost:8000/tasks
+```
+
+Example response:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+```
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Learn FastAPI",
+    "done": false
+  },
+  {
+    "id": 2,
+    "title": "Learn PostgreSQL",
+    "done": false
+  }
+]
+```
+
+### 5. Verify the Database
+
+The PostgreSQL database can be accessed inside the running container:
+
+```bash
+docker exec -it taskdb psql -U postgres -d tasks
+```
+
+View available tables:
+
+```sql
+\dt
+```
+
+Check stored task data:
+
+```sql
+SELECT * FROM tasks;
+```
+
+Example output:
+
+```
+ id | title              | done
+----|--------------------|------
+ 1  | Learn FastAPI      | false
+ 2  | Learn PostgreSQL   | false
+ 3  | Build Task API     | false
+```
+
+### Clean Installation Test
+
+The project was verified using a fresh environment:
+
+```bash
+cp .env.example .env
+docker compose up
+```
+
+Expected result:
+
+- ✅ Application starts successfully
+- ✅ PostgreSQL connects automatically
+- ✅ Database tables are created automatically
+- ✅ Seed data is inserted only on first run
+- ✅ API endpoints work without manual database setup
+- ✅ Data remains available after restarting containers
+
+### Database Screenshot
+
+The PostgreSQL database state is captured below:
+
+```
+screenshots/postgres-data.png
+```
+
+The screenshot includes:
+
+- PostgreSQL table listing (`\dt`)
+- Task records from `SELECT * FROM tasks`
+- Running database container verification
+
+### Deployment Commit
+
+Stage 5 completed:
+
+```
+Stage 5: One-command stack + documentation
+```
+
+The repository now allows any developer to clone, configure, and run the complete application stack using Docker Compose.
+
+---
+
+## Learning Outcomes
 
 Through this project, I learned:
 
-- Designing REST APIs using FastAPI
+- Designing REST APIs with FastAPI
 - Working with request bodies
 - Using Pydantic schemas
 - Performing SQL CRUD operations
-- Connecting applications with databases
+- Connecting applications to databases
 - Separating routes from database logic
-- Understanding persistence
+- Understanding data persistence
 - Writing professional backend documentation
 
 ---
 
-# Future Improvements
+## Future Improvements
 
-Possible improvements:
+Possible improvements include:
 
-- PostgreSQL migration
 - Authentication and authorization
-- Docker deployment
 - Automated testing
 - Database migrations
 - Pagination
@@ -776,13 +973,13 @@ Possible improvements:
 
 ---
 
-# Contributing
+## Contributing
 
 This is a personal learning project built to practice backend engineering and API design. It's not currently set up to accept external contributions, but feedback, suggestions, and issue reports are welcome — feel free to open an issue if you spot a bug or have an idea for improvement.
 
 ---
 
-# License
+## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
@@ -790,7 +987,7 @@ You are free to use, copy, modify, and distribute this code for educational or p
 
 ---
 
-# Author
+## Author
 
-**Rubab Ftaima**
+**Rubab Fatima**
 GitHub: [RubabFatima2](https://github.com/RubabFatima2)
