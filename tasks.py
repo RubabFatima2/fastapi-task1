@@ -40,6 +40,21 @@ def initialize_database():
     cursor.close()
     connection.close()
 
+def health_check():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT 1")
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    except Exception:
+        return False
+        
 def get_all_tasks(search=None, done=None):
     connection = get_connection()
     cursor = connection.cursor()

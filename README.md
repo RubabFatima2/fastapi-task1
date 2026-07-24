@@ -711,7 +711,212 @@ GET /stats
 *Accessed through SQL / DB Browser for SQLite*
 
 ---
+Here's a professional **README.md** section you can directly paste under **"Optional Extras"** or **"Bonus Features"**.
 
+````md
+# ⭐ Optional Extras
+
+In addition to the required assignment features, the following optional enhancements were implemented to improve reliability, demonstrate Docker best practices, and prepare the project for future scalability.
+
+---
+
+## 1. Database Persistence Experiment (Mortality Experiment)
+
+To understand why Docker volumes are important, a persistence experiment was performed.
+
+### Experiment
+
+1. Started the PostgreSQL container **without a Docker volume**.
+2. Created several tasks in the database.
+3. Removed the PostgreSQL container.
+4. Started a fresh PostgreSQL container.
+
+### Observation
+
+All previously stored tasks disappeared because the database files were stored only inside the container.
+
+### Why Docker Volumes Exist
+
+Docker containers are **ephemeral**, meaning they can be removed and recreated at any time. A Docker volume stores database files outside the container so that application data survives container deletion, upgrades, and restarts.
+
+---
+
+## 2. Real Database Health Check
+
+A production-style health check endpoint was implemented.
+
+### Endpoint
+
+```
+GET /health
+```
+
+### Behaviour
+
+The endpoint performs a simple database query:
+
+```sql
+SELECT 1;
+```
+
+If the query succeeds, the API returns:
+
+```json
+{
+  "status": "ok",
+  "db": "ok"
+}
+```
+
+If the database cannot be reached:
+
+```json
+{
+  "status": "error",
+  "db": "failed"
+}
+```
+
+### Why This Matters
+
+Many production systems use health endpoints to determine whether an application is ready to receive traffic. Load balancers, Kubernetes, Docker Compose, and cloud platforms often rely on these checks before routing requests to an application.
+
+---
+
+## 3. Redis Integration
+
+Redis was added as an additional service using Docker Compose.
+
+```yaml
+redis:
+  image: redis:latest
+```
+
+The application connects to Redis during startup and sends a **PING** request to verify connectivity.
+
+Successful startup confirms that:
+
+- Redis container is running.
+- Docker networking is configured correctly.
+- FastAPI can communicate with Redis.
+
+### Manual Verification
+
+Redis CLI was used to verify the connection.
+
+```bash
+docker exec -it task1-redis-1 redis-cli
+```
+
+```text
+PING
+```
+
+Output:
+
+```text
+PONG
+```
+
+Additional Redis commands tested:
+
+```text
+SET name Rubab
+GET name
+KEYS *
+DEL name
+```
+
+Redis has been successfully integrated and is ready for future features such as:
+
+- Response caching
+- Rate limiting
+- Session storage
+- Background job queues
+
+---
+
+## 4. PostgreSQL Health Check in Docker Compose
+
+During development, the API occasionally started before PostgreSQL had finished initializing, causing connection failures.
+
+To solve this, a Docker health check was added.
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "pg_isready -U postgres -d tasks"]
+  interval: 5s
+  timeout: 5s
+  retries: 5
+```
+
+The API service waits until PostgreSQL reports itself as healthy before starting.
+
+```yaml
+depends_on:
+  db:
+    condition: service_healthy
+```
+
+This prevents startup race conditions and ensures reliable application initialization.
+
+---
+
+## 5. Docker Networking
+
+The application consists of three containers connected through Docker Compose:
+
+- FastAPI API
+- PostgreSQL Database
+- Redis
+
+Docker automatically creates an internal network where services communicate using their service names.
+
+```
+FastAPI  --->  db:5432
+FastAPI  --->  redis:6379
+```
+
+No IP addresses need to be hardcoded because Docker provides built-in service discovery.
+
+---
+
+## 6. Lessons Learned
+
+Implementing these optional features provided practical experience with:
+
+- Docker volumes and persistent storage
+- Container lifecycle management
+- PostgreSQL initialization
+- Docker networking
+- Service discovery
+- Health checks
+- Startup dependencies
+- Redis integration
+- Debugging Docker Compose applications
+- Production-ready container orchestration
+
+---
+
+## Extras Implemented
+
+| Feature | Status |
+|---------|:------:|
+| Database Persistence Experiment | ✅ |
+| Real Database Health Check (`SELECT 1`) | ✅ |
+| Redis Integration | ✅ |
+| Redis Startup PING | ✅ |
+| PostgreSQL Docker Health Check | ✅ |
+| Docker Service Dependencies | ✅ |
+| Docker Networking Demonstration | ✅ |
+| Multi-stage Dockerfile | ❌ Not Implemented |
+| Database Index + EXPLAIN ANALYZE | ❌ Not Implemented |
+
+---
+
+These optional enhancements make the application more reliable, closer to production standards, and provide a stronger understanding of Docker, PostgreSQL, and distributed application architecture.
+````
+---
 ## Testing
 
 The API was tested using:

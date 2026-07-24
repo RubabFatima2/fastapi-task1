@@ -2,8 +2,9 @@ from typing import Optional
 from fastapi import HTTPException,Response, status
 from fastapi import FastAPI
 from pydantic import BaseModel
-from tasks import get_all_tasks, get_by_id, add_task, update_task, delete_task, get_stats
+from tasks import get_all_tasks, get_by_id, add_task, update_task, delete_task, get_stats, health_check
 from tasks import initialize_database
+from redis_client import ping_redis
 class newtask(BaseModel):
     title : str
     done : bool
@@ -24,6 +25,10 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup():
     initialize_database()
+    if ping_redis():
+        print("✅ Redis connected")
+    else:
+        print("❌ Redis connection failed")
 @app.get("/")
 async def wealth():
     return { "name": "Task API", "version": "1.0", "endpoints": ["/tasks"] }
@@ -31,8 +36,17 @@ async def wealth():
 
 #show health
 @app.get("/health")
-async def health():
-    return { "status": "ok" }
+def health():
+    if health_check():
+        return {
+            "status": "ok",
+            "db": "ok"
+        }
+
+    return {
+        "status": "error",
+        "db": "failed"
+    }
 
 #show all tasks
 @app.get("/tasks")
