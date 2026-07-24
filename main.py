@@ -3,6 +3,7 @@ from fastapi import HTTPException,Response, status
 from fastapi import FastAPI
 from pydantic import BaseModel
 from tasks import get_all_tasks, get_by_id, add_task, update_task, delete_task, get_stats
+from tasks import initialize_database
 class newtask(BaseModel):
     title : str
     done : bool
@@ -18,6 +19,11 @@ app = FastAPI()
 # Task Management API using FastAPI + SQLite
 # Assignment 2
 # ==========================================
+
+
+@app.on_event("startup")
+async def startup():
+    initialize_database()
 @app.get("/")
 async def wealth():
     return { "name": "Task API", "version": "1.0", "endpoints": ["/tasks"] }

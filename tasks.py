@@ -8,30 +8,37 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 def get_connection():
     return psycopg.connect(DATABASE_URL)
 
-connection = get_connection()
-cursor = connection.cursor()
-cursor.execute("""CREATE TABLE IF NOT EXISTS tasks(
-    id serial PRIMARY KEY,
-    title TEXT NOT NULL,
-    done BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)""")
 
-cursor.execute("SELECT COUNT(*) FROM tasks")
-count = cursor.fetchone()[0]
+def initialize_database():
+    connection = get_connection()
+    cursor = connection.cursor()
 
-if count == 0:
-    cursor.executemany(
-    "INSERT INTO tasks(title, done) VALUES (%s, %s)",
-    [
-        ("Learn FastAPI", False),
-        ("Learn SQLite",True),
-        ("Build Todo API", False),
-    ]
-)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS tasks (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        done BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-connection.commit()
+    cursor.execute("SELECT COUNT(*) FROM tasks")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        cursor.executemany(
+            "INSERT INTO tasks(title, done) VALUES (%s, %s)",
+            [
+                ("Learn FastAPI", False),
+                ("Learn SQLite", True),
+                ("Build Todo API", False),
+            ],
+        )
+
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 def get_all_tasks(search=None, done=None):
     connection = get_connection()
@@ -128,7 +135,6 @@ def get_stats():
     cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = FALSE")
     pending = cursor.fetchone()[0]
     
-    cursor.close()
     connection.close()
 
     return {
@@ -136,4 +142,3 @@ def get_stats():
         "completed": completed,
         "pending": pending
     }
-connection.close()
